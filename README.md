@@ -1,7 +1,5 @@
 # Open Doc Router TypeScript API Library
 
-[![NPM version](<https://img.shields.io/npm/v/@llamaindex/opendocrouter.svg?label=npm%20(stable)>)](https://npmjs.org/package/@llamaindex/opendocrouter) ![npm bundle size](https://img.shields.io/bundlephobia/minzip/@llamaindex/opendocrouter)
-
 This library provides convenient access to the Open Doc Router REST API from server-side TypeScript or JavaScript.
 
 The REST API documentation can be found on [developers.llamaindex.ai](https://developers.llamaindex.ai/). The full API of this library can be found in [api.md](api.md).
@@ -11,11 +9,11 @@ It is generated with [Stainless](https://www.stainless.com/).
 ## Installation
 
 ```sh
-npm install git+ssh://git@github.com:run-llama/opendocrouter-typescript.git
+npm install git+https://github.com/run-llama/opendocrouter-typescript.git
 ```
 
 > [!NOTE]
-> Once this package is [published to npm](https://www.stainless.com/docs/guides/publish), this will become: `npm install @llamaindex/opendocrouter`
+> This package is distributed only from this Git repository. It is not published to npm.
 
 ## Usage
 
@@ -85,6 +83,7 @@ Error codes are as follows:
 | 401         | `AuthenticationError`      |
 | 403         | `PermissionDeniedError`    |
 | 404         | `NotFoundError`            |
+| 409         | `ConflictError`            |
 | 422         | `UnprocessableEntityError` |
 | 429         | `RateLimitError`           |
 | >=500       | `InternalServerError`      |
@@ -322,7 +321,7 @@ const client = new OpenDocRouter({
 <img src="https://raw.githubusercontent.com/stainless-api/sdk-assets/refs/heads/main/deno.svg" align="top" width="18" height="21"> **Deno** <sup>[[docs](https://docs.deno.com/api/deno/~/Deno.createHttpClient)]</sup>
 
 ```ts
-import OpenDocRouter from 'npm:@llamaindex/opendocrouter';
+import OpenDocRouter from '@llamaindex/opendocrouter';
 
 const httpClient = Deno.createHttpClient({ proxy: { url: 'http://localhost:8888' } });
 const client = new OpenDocRouter({
@@ -332,17 +331,23 @@ const client = new OpenDocRouter({
 });
 ```
 
-## Frequently Asked Questions
+## Versioning
 
-## Semantic versioning
+This package is distributed only from this Git repository. It is not published to npm, has no release
+tags, and produces no changelog — installing from the default branch always tracks the latest commit.
+To pin a specific revision, install from a commit SHA:
 
-This package generally follows [SemVer](https://semver.org/spec/v2.0.0.html) conventions, though certain backwards-incompatible changes may be released as minor versions:
+    npm install git+https://github.com/run-llama/opendocrouter-typescript.git#<commit-sha>
 
-1. Changes that only affect static types, without breaking runtime behavior.
-2. Changes to library internals which are technically public but not intended or documented for external use. _(Please open a GitHub issue to let us know if you are relying on such internals.)_
-3. Changes that we do not expect to impact the vast majority of users in practice.
+Backwards-incompatible changes can land on the default branch, so pin a SHA if you need a stable surface.
 
-We take backwards-compatibility seriously and work hard to ensure you can rely on a smooth upgrade experience.
+### Determining the installed revision
+
+The package version is a fixed placeholder (`0.0.1`) and never changes, so it cannot tell you which
+revision you are running. Because the library is installed from Git, read the commit from your
+project's lockfile instead: the `@llamaindex/opendocrouter` entry records the resolved commit SHA
+in its `resolved` field (`package-lock.json`) or `resolved` line (`yarn.lock`). Quote that SHA when
+filing an issue.
 
 We are keen for your feedback; please open an [issue](https://www.github.com/run-llama/opendocrouter-typescript/issues) with questions, bugs, or suggestions.
 
