@@ -6,35 +6,35 @@ import { RequestOptions } from '../internal/request-options';
 import { path } from '../internal/utils/path';
 
 /**
- * Parse documents, synchronously or as async jobs.
+ * Parse documents, synchronously (up to 50 pages) or as async jobs (up to 500 pages).
  */
 export class Parse extends APIResource {
   /**
    * `mode: "sync"` (the default) parses the document in this request and returns 200
-   * with every page, up to the model's `max_sync_pages`. `mode: "async"` returns 202
-   * and parses up to 500 pages as a job; `GET /v1/parse/{id}?expand=markdown` has
-   * the results. At most 5 async requests run at once per account, and at most 300
-   * requests a minute.
+   * with every page, up to the model's `max_sync_pages`. `mode: "async"`, which
+   * needs `cache: true`, returns 202 and parses up to 500 pages as a job;
+   * `GET /v1/parse/{id}?expand=markdown` has the results. At most 5 async requests
+   * run at once per account, and at most 300 requests a minute.
    *
    * Admission holds the most the request could cost; it's released, less the actual
    * charge, when the request finishes. Failed pages are free.
    *
    * @example
    * ```ts
-   * const parse = await client.parse.create({
+   * const parseRecord = await client.parse.create({
    *   document: { url: 'url' },
    *   model: 'google/gemini-3-flash',
    * });
    * ```
    */
-  create(body: ParseCreateParams, options?: RequestOptions): APIPromise<ParseCreateResponse> {
+  create(body: ParseCreateParams, options?: RequestOptions): APIPromise<ParseRecord> {
     return this._client.post('/v1/parse', { body, ...options });
   }
 
   /**
-   * A running job stops before its next chunk. Pages already parsed are still
-   * charged. The request's status and cost stay available. A sync request stored
-   * nothing, so this does nothing.
+   * Deletes the results stored with `cache: true`, so they're also no longer served
+   * from the cache. A running job stops before its next chunk. Pages already parsed
+   * are still charged. The request's status and cost stay available.
    *
    * @example
    * ```ts
@@ -52,9 +52,9 @@ export class Parse extends APIResource {
    * progress. Then it returns every page, unless the expanded results are over 4 MB:
    * then `has_more` is true, and you ask again with `cursor` set to `next_cursor`.
    *
-   * Markdown and layout are opt-in, with `expand`, and only async requests store
-   * them, for 24 hours after they finish. Without it, this never returns document
-   * text.
+   * Markdown and layout are opt-in, with `expand`, and only requests sent with
+   * `cache: true` store them, for 24 hours after they finish. Without `expand`, this
+   * never returns document text.
    *
    * @example
    * ```ts
@@ -93,8 +93,7 @@ export interface ParseRecord {
   has_more: boolean;
 
   /**
-   * The request's `mode`. `async` markdown is stored for `expand=markdown`; `sync`
-   * markdown is only in the POST response.
+   * The request's `mode`.
    */
   mode: 'sync' | 'async';
 
@@ -109,18 +108,15 @@ export interface ParseRecord {
 
   page_count: number;
 
-  /**
-   * Empty while processing.
-   */
-  pages: Array<ParseRecord.RecordOkPage | ParseRecord.RecordErrorPage>;
+  pages: Array<ParseRecord.OkPage | ParseRecord.ErrorPage>;
 
   pages_done: number;
 
   price_version: string;
 
   /**
-   * When an async request's stored results are, or were, deleted. Null for sync
-   * requests, and while processing.
+   * When the stored results are, or were, deleted. Null while processing or when
+   * nothing was stored (like setting `cache: false`).
    */
   results_expire_at: string;
 
@@ -134,141 +130,9 @@ export interface ParseRecord {
    * Null until the request settles.
    */
   usage: ParseRecord.Usage;
-
-  /**
-   * In the 202 response only.
-   */
-  poll_url?: string;
 }
 
 export namespace ParseRecord {
-  export interface RecordOkPage {
-    /**
-     * Served from the result cache, free.
-     */
-    cached: boolean;
-
-    charge_usd: number;
-
-    page: number;
-
-    status: 'ok';
-
-    usage: RecordOkPage.Usage;
-
-    /**
-     * With `expand=layout`, for requests sent with `layout: true`.
-     */
-    layout?: unknown;
-
-    /**
-     * With `expand=markdown` only.
-     */
-    markdown?: string;
-  }
-
-  export namespace RecordOkPage {
-    export interface Usage {
-      input_tokens: number;
-
-      output_tokens: number;
-    }
-  }
-
-  export interface RecordErrorPage {
-    charge_usd: 0;
-
-    error: RecordErrorPage.Error;
-
-    page: number;
-
-    status: 'error';
-  }
-
-  export namespace RecordErrorPage {
-    export interface Error {
-      /**
-       * - `provider_error`: The provider returned an error.
-       * - `rate_limited`: The provider rate-limited the page.
-       * - `timeout`: The page didn't finish before the deadline.
-       * - `output_truncated`: The output hit the token limit.
-       * - `content_filtered`: The provider blocked the output, or the model declined.
-       * - `repetitive_output`: The model got stuck repeating the same text.
-       * - `invalid_output`: The model answered without transcribing the page.
-       * - `empty_output`: The model returned no text.
-       * - `at_capacity`: No provider capacity before the deadline.
-       * - `unreadable_page`: The PDF opened, but this page couldn't be split or
-       *   rendered.
-       * - `response_too_large`: The page didn't fit in the response. Request it on its
-       *   own with pages.
-       * - `not_processed`: The async job ended before this page ran.
-       */
-      code:
-        | 'provider_error'
-        | 'rate_limited'
-        | 'timeout'
-        | 'output_truncated'
-        | 'content_filtered'
-        | 'repetitive_output'
-        | 'invalid_output'
-        | 'empty_output'
-        | 'at_capacity'
-        | 'unreadable_page'
-        | 'response_too_large'
-        | 'not_processed';
-
-      /**
-       * With `expand=markdown`, the page's own message. Otherwise the code's standard
-       * description.
-       */
-      message: string;
-
-      /**
-       * The provider's own reason when it gave one, e.g. `RECITATION`, `SAFETY`,
-       * `refusal`, `max_tokens` or `repetition`.
-       */
-      reason?: string;
-    }
-  }
-
-  /**
-   * Null until the request settles.
-   */
-  export interface Usage {
-    input_tokens: number;
-
-    output_tokens: number;
-
-    [k: string]: unknown;
-  }
-}
-
-export interface ParseCreateResponse {
-  /**
-   * For `GET /v1/parse/{id}`.
-   */
-  id: string;
-
-  charge_usd: number;
-
-  model: string;
-
-  model_version: string;
-
-  /**
-   * There's no joined markdown, to stay under the response size limit: join
-   * `pages[].markdown` yourself.
-   */
-  pages: Array<ParseCreateResponse.OkPage | ParseCreateResponse.ErrorPage>;
-
-  price_version: string;
-
-  status: 'completed' | 'partial' | 'failed';
-
-  usage: ParseCreateResponse.Usage;
-}
-
-export namespace ParseCreateResponse {
   export interface OkPage {
     /**
      * Served from the result cache, free.
@@ -277,8 +141,6 @@ export namespace ParseCreateResponse {
 
     charge_usd: number;
 
-    markdown: string;
-
     page: number;
 
     status: 'ok';
@@ -286,9 +148,16 @@ export namespace ParseCreateResponse {
     usage: OkPage.Usage;
 
     /**
-     * With `layout: true` only.
+     * For requests sent with `layout: true`: in the POST response, or from GET with
+     * `expand=layout`.
      */
     layout?: OkPage.PageLayoutOk | OkPage.PageLayoutError;
+
+    /**
+     * Always in the POST response. From `GET /v1/parse/{id}`, with `expand=markdown`
+     * only.
+     */
+    markdown?: string;
   }
 
   export namespace OkPage {
@@ -430,6 +299,10 @@ export namespace ParseCreateResponse {
         | 'response_too_large'
         | 'not_processed';
 
+      /**
+       * The page's own message in the POST response, or from GET with `expand=markdown`.
+       * Otherwise the code's standard description.
+       */
       message: string;
 
       /**
@@ -440,10 +313,15 @@ export namespace ParseCreateResponse {
     }
   }
 
+  /**
+   * Null until the request settles.
+   */
   export interface Usage {
     input_tokens: number;
 
     output_tokens: number;
+
+    [k: string]: unknown;
   }
 }
 
@@ -468,8 +346,10 @@ export interface ParseCreateParams {
   model: string;
 
   /**
-   * Keep ok pages for 24 hours and serve identical pages of the same document from
-   * them for free. Defaults to false.
+   * Store the results, encrypted, for 24 hours: `GET /v1/parse/{id}?expand=markdown`
+   * reads them and `DELETE /v1/parse/{id}` deletes them sooner. Pages your account
+   * already has stored for the same document, model and `layout` are served from
+   * them, free. Required for `async`. Defaults to false.
    */
   cache?: boolean;
 
@@ -481,9 +361,10 @@ export interface ParseCreateParams {
   layout?: boolean;
 
   /**
-   * `sync` parses the document in this request and returns 200 with every page, up
-   * to the model's `max_sync_pages`. `async` returns 202 with a `poll_url` and
-   * parses it as a job, up to 500 pages. Defaults to `sync`.
+   * `sync` parses the document in this request and returns 200 with results for
+   * every page, up to the model's `max_sync_pages`. `async` returns 202 parses it as
+   * a job pollable on `GET /v1/parse/<id>`, up to 500 pages. It needs `cache: true`.
+   * Defaults to `sync`.
    */
   mode?: 'sync' | 'async';
 
@@ -513,7 +394,7 @@ export namespace ParseCreateParams {
 
   export interface UploadDocument {
     /**
-     * From `POST /v1/uploads`.
+     * An ID obtained from `POST /v1/uploads`.
      */
     upload_id: string;
   }
@@ -527,7 +408,8 @@ export interface ParseGetParams {
 
   /**
    * `markdown` adds each ok page's markdown, `layout` its layout (for requests sent
-   * with `layout: true`), and `markdown,layout` both. Async requests only.
+   * with `layout: true`), and `markdown,layout` both. For requests sent with
+   * `cache: true`.
    */
   expand?: string;
 }
@@ -535,7 +417,6 @@ export interface ParseGetParams {
 export declare namespace Parse {
   export {
     type ParseRecord as ParseRecord,
-    type ParseCreateResponse as ParseCreateResponse,
     type ParseDeleteResponse as ParseDeleteResponse,
     type ParseCreateParams as ParseCreateParams,
     type ParseGetParams as ParseGetParams,

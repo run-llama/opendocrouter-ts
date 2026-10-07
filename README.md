@@ -25,12 +25,12 @@ const client = new OpenDocRouter({
   apiKey: process.env['OPEN_DOC_ROUTER_API_KEY'], // This is the default and can be omitted
 });
 
-const parse = await client.parse.create({
+const parseRecord = await client.parse.create({
   document: { url: 'https://arxiv.org/pdf/1706.03762' },
   model: 'google/gemini-3-flash',
 });
 
-console.log(parse.id);
+console.log(parseRecord.id);
 ```
 
 ### Request & Response types

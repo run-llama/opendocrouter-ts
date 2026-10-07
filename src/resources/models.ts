@@ -4,9 +4,6 @@ import { APIResource } from '../core/resource';
 import { APIPromise } from '../core/api-promise';
 import { RequestOptions } from '../internal/request-options';
 
-/**
- * The models you can parse with, and their prices.
- */
 export class Models extends APIResource {
   /**
    * List models and their prices

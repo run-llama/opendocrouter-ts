@@ -22,7 +22,6 @@ import { ModelListResponse, Models } from './resources/models';
 import {
   Parse,
   ParseCreateParams,
-  ParseCreateResponse,
   ParseDeleteResponse,
   ParseGetParams,
   ParseRecord,
@@ -748,7 +747,7 @@ export class OpenDocRouter {
   static toFile = Uploads.toFile;
 
   /**
-   * Parse documents, synchronously or as async jobs.
+   * Parse documents, synchronously (up to 50 pages) or as async jobs (up to 500 pages).
    */
   parse: API.Parse = new API.Parse(this);
   /**
@@ -759,9 +758,6 @@ export class OpenDocRouter {
    * Credit, and what each request did and cost.
    */
   credits: API.Credits = new API.Credits(this);
-  /**
-   * The models you can parse with, and their prices.
-   */
   models: API.Models = new API.Models(this);
 }
 
@@ -775,7 +771,6 @@ export declare namespace OpenDocRouter {
   export {
     Parse as Parse,
     type ParseRecord as ParseRecord,
-    type ParseCreateResponse as ParseCreateResponse,
     type ParseDeleteResponse as ParseDeleteResponse,
     type ParseCreateParams as ParseCreateParams,
     type ParseGetParams as ParseGetParams,

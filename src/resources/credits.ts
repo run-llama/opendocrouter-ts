@@ -9,7 +9,7 @@ import { RequestOptions } from '../internal/request-options';
  */
 export class Credits extends APIResource {
   /**
-   * Get the account's credit
+   * Get the account's credit details
    */
   get(options?: RequestOptions): APIPromise<Credits> {
     return this._client.get('/v1/credits', options);
