@@ -1,6 +1,6 @@
 {
   "name": "@llamaindex/opendocrouter",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "The official TypeScript library for the Open Doc Router API",
   "author": "Open Doc Router <support@runllama.ai>",
   "types": "dist/index.d.ts",
