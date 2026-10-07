@@ -5,7 +5,7 @@ export { Models, type ModelListResponse } from './models';
 export {
   Parse,
   type ParseRecord,
-  type ParseResult,
+  type ParseCreateResponse,
   type ParseDeleteResponse,
   type ParseCreateParams,
   type ParseGetParams,

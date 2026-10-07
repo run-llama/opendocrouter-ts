@@ -21,13 +21,13 @@ export class Parse extends APIResource {
    *
    * @example
    * ```ts
-   * const parseResult = await client.parse.create({
+   * const parse = await client.parse.create({
    *   document: { url: 'url' },
    *   model: 'google/gemini-3-flash',
    * });
    * ```
    */
-  create(body: ParseCreateParams, options?: RequestOptions): APIPromise<ParseResult> {
+  create(body: ParseCreateParams, options?: RequestOptions): APIPromise<ParseCreateResponse> {
     return this._client.post('/v1/parse', { body, ...options });
   }
 
@@ -243,7 +243,7 @@ export namespace ParseRecord {
   }
 }
 
-export interface ParseResult {
+export interface ParseCreateResponse {
   /**
    * For `GET /v1/parse/{id}`.
    */
@@ -259,16 +259,16 @@ export interface ParseResult {
    * There's no joined markdown, to stay under the response size limit: join
    * `pages[].markdown` yourself.
    */
-  pages: Array<ParseResult.OkPage | ParseResult.ErrorPage>;
+  pages: Array<ParseCreateResponse.OkPage | ParseCreateResponse.ErrorPage>;
 
   price_version: string;
 
   status: 'completed' | 'partial' | 'failed';
 
-  usage: ParseResult.Usage;
+  usage: ParseCreateResponse.Usage;
 }
 
-export namespace ParseResult {
+export namespace ParseCreateResponse {
   export interface OkPage {
     /**
      * Served from the result cache, free.
@@ -535,7 +535,7 @@ export interface ParseGetParams {
 export declare namespace Parse {
   export {
     type ParseRecord as ParseRecord,
-    type ParseResult as ParseResult,
+    type ParseCreateResponse as ParseCreateResponse,
     type ParseDeleteResponse as ParseDeleteResponse,
     type ParseCreateParams as ParseCreateParams,
     type ParseGetParams as ParseGetParams,

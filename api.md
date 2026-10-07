@@ -3,12 +3,12 @@
 Types:
 
 - <code><a href="./src/resources/parse.ts">ParseRecord</a></code>
-- <code><a href="./src/resources/parse.ts">ParseResult</a></code>
+- <code><a href="./src/resources/parse.ts">ParseCreateResponse</a></code>
 - <code><a href="./src/resources/parse.ts">ParseDeleteResponse</a></code>
 
 Methods:
 
-- <code title="post /v1/parse">client.parse.<a href="./src/resources/parse.ts">create</a>({ ...params }) -> ParseResult</code>
+- <code title="post /v1/parse">client.parse.<a href="./src/resources/parse.ts">create</a>({ ...params }) -> ParseCreateResponse</code>
 - <code title="delete /v1/parse/{id}">client.parse.<a href="./src/resources/parse.ts">delete</a>(id) -> ParseDeleteResponse</code>
 - <code title="get /v1/parse/{id}">client.parse.<a href="./src/resources/parse.ts">get</a>(id, { ...params }) -> ParseRecord</code>
 

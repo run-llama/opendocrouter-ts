@@ -22,10 +22,10 @@ import { ModelListResponse, Models } from './resources/models';
 import {
   Parse,
   ParseCreateParams,
+  ParseCreateResponse,
   ParseDeleteResponse,
   ParseGetParams,
   ParseRecord,
-  ParseResult,
 } from './resources/parse';
 import { Upload, Uploads as UploadsAPIUploads } from './resources/uploads';
 import { type Fetch } from './internal/builtin-types';
@@ -775,7 +775,7 @@ export declare namespace OpenDocRouter {
   export {
     Parse as Parse,
     type ParseRecord as ParseRecord,
-    type ParseResult as ParseResult,
+    type ParseCreateResponse as ParseCreateResponse,
     type ParseDeleteResponse as ParseDeleteResponse,
     type ParseCreateParams as ParseCreateParams,
     type ParseGetParams as ParseGetParams,
