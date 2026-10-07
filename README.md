@@ -1,12 +1,10 @@
-# Open Doc Router TypeScript API Library
+# OpenDocRouter TypeScript API Library
 
 [![NPM version](<https://img.shields.io/npm/v/@llamaindex/opendocrouter.svg?label=npm%20(stable)>)](https://npmjs.org/package/@llamaindex/opendocrouter) ![npm bundle size](https://img.shields.io/bundlephobia/minzip/@llamaindex/opendocrouter)
 
-This library provides convenient access to the Open Doc Router REST API from server-side TypeScript or JavaScript.
+This library provides convenient access to the OpenDocRouter REST API from server-side TypeScript or JavaScript.
 
-The REST API documentation can be found on [developers.llamaindex.ai](https://developers.llamaindex.ai/). The full API of this library can be found in [api.md](api.md).
-
-It is generated with [Stainless](https://www.stainless.com/).
+The REST API documentation can be found on [OpenDocRouter](https://www.opendocrouter.ai/docs). The full API of this library can be found in [api.md](api.md).
 
 ## Installation
 
@@ -208,70 +206,6 @@ const client = new OpenDocRouter({
 });
 ```
 
-### Making custom/undocumented requests
-
-This library is typed for convenient access to the documented API. If you need to access undocumented
-endpoints, params, or response properties, the library can still be used.
-
-#### Undocumented endpoints
-
-To make requests to undocumented endpoints, you can use `client.get`, `client.post`, and other HTTP verbs.
-Options on the client, such as retries, will be respected when making these requests.
-
-```ts
-await client.post('/some/path', {
-  body: { some_prop: 'foo' },
-  query: { some_query_arg: 'bar' },
-});
-```
-
-#### Undocumented request params
-
-To make requests using undocumented parameters, you may use `// @ts-expect-error` on the undocumented
-parameter. This library doesn't validate at runtime that the request matches the type, so any extra values you
-send will be sent as-is.
-
-```ts
-client.parse.create({
-  // ...
-  // @ts-expect-error baz is not yet public
-  baz: 'undocumented option',
-});
-```
-
-For requests with the `GET` verb, any extra params will be in the query, all other requests will send the
-extra param in the body.
-
-If you want to explicitly send an extra argument, you can do so with the `query`, `body`, and `headers` request
-options.
-
-#### Undocumented response properties
-
-To access undocumented response properties, you may access the response object with `// @ts-expect-error` on
-the response object, or cast the response object to the requisite type. Like the request params, we do not
-validate or strip extra properties from the response from the API.
-
-### Customizing the fetch client
-
-By default, this library expects a global `fetch` function is defined.
-
-If you want to use a different `fetch` function, you can either polyfill the global:
-
-```ts
-import fetch from 'my-fetch';
-
-globalThis.fetch = fetch;
-```
-
-Or pass it to the client:
-
-```ts
-import OpenDocRouter from '@llamaindex/opendocrouter';
-import fetch from 'my-fetch';
-
-const client = new OpenDocRouter({ fetch });
-```
-
 ### Fetch options
 
 If you want to set custom `fetch` options without overriding the `fetch` function, you can provide a `fetchOptions` object when instantiating the client or making a request. (Request-specific options override client options.)
@@ -282,50 +216,6 @@ import OpenDocRouter from '@llamaindex/opendocrouter';
 const client = new OpenDocRouter({
   fetchOptions: {
     // `RequestInit` options
-  },
-});
-```
-
-#### Configuring proxies
-
-To modify proxy behavior, you can provide custom `fetchOptions` that add runtime-specific proxy
-options to requests:
-
-<img src="https://raw.githubusercontent.com/stainless-api/sdk-assets/refs/heads/main/node.svg" align="top" width="18" height="21"> **Node** <sup>[[docs](https://github.com/nodejs/undici/blob/main/docs/docs/api/ProxyAgent.md#example---proxyagent-with-fetch)]</sup>
-
-```ts
-import OpenDocRouter from '@llamaindex/opendocrouter';
-import * as undici from 'undici';
-
-const proxyAgent = new undici.ProxyAgent('http://localhost:8888');
-const client = new OpenDocRouter({
-  fetchOptions: {
-    dispatcher: proxyAgent,
-  },
-});
-```
-
-<img src="https://raw.githubusercontent.com/stainless-api/sdk-assets/refs/heads/main/bun.svg" align="top" width="18" height="21"> **Bun** <sup>[[docs](https://bun.sh/guides/http/proxy)]</sup>
-
-```ts
-import OpenDocRouter from '@llamaindex/opendocrouter';
-
-const client = new OpenDocRouter({
-  fetchOptions: {
-    proxy: 'http://localhost:8888',
-  },
-});
-```
-
-<img src="https://raw.githubusercontent.com/stainless-api/sdk-assets/refs/heads/main/deno.svg" align="top" width="18" height="21"> **Deno** <sup>[[docs](https://docs.deno.com/api/deno/~/Deno.createHttpClient)]</sup>
-
-```ts
-import OpenDocRouter from 'npm:@llamaindex/opendocrouter';
-
-const httpClient = Deno.createHttpClient({ proxy: { url: 'http://localhost:8888' } });
-const client = new OpenDocRouter({
-  fetchOptions: {
-    client: httpClient,
   },
 });
 ```
