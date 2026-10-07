@@ -1,17 +1,18 @@
-# OpenDocRouter TypeScript API Library
+# Open Doc Router TypeScript API Library
 
-This library provides convenient access to the OpenDocRouter REST API from server-side TypeScript or JavaScript.
+[![NPM version](<https://img.shields.io/npm/v/@llamaindex/opendocrouter.svg?label=npm%20(stable)>)](https://npmjs.org/package/@llamaindex/opendocrouter) ![npm bundle size](https://img.shields.io/bundlephobia/minzip/@llamaindex/opendocrouter)
 
-The REST API documentation can be found on [OpenDocRouter](https://www.opendocrouter.ai/docs). The full API of this library can be found in [api.md](api.md).
+This library provides convenient access to the Open Doc Router REST API from server-side TypeScript or JavaScript.
+
+The REST API documentation can be found on [developers.llamaindex.ai](https://developers.llamaindex.ai/). The full API of this library can be found in [api.md](api.md).
+
+It is generated with [Stainless](https://www.stainless.com/).
 
 ## Installation
 
 ```sh
-npm install git+https://github.com/run-llama/opendocrouter-typescript.git
+npm install @llamaindex/opendocrouter
 ```
-
-> [!NOTE]
-> This package is distributed only from this Git repository. It is not published to npm.
 
 ## Usage
 
@@ -207,6 +208,70 @@ const client = new OpenDocRouter({
 });
 ```
 
+### Making custom/undocumented requests
+
+This library is typed for convenient access to the documented API. If you need to access undocumented
+endpoints, params, or response properties, the library can still be used.
+
+#### Undocumented endpoints
+
+To make requests to undocumented endpoints, you can use `client.get`, `client.post`, and other HTTP verbs.
+Options on the client, such as retries, will be respected when making these requests.
+
+```ts
+await client.post('/some/path', {
+  body: { some_prop: 'foo' },
+  query: { some_query_arg: 'bar' },
+});
+```
+
+#### Undocumented request params
+
+To make requests using undocumented parameters, you may use `// @ts-expect-error` on the undocumented
+parameter. This library doesn't validate at runtime that the request matches the type, so any extra values you
+send will be sent as-is.
+
+```ts
+client.parse.create({
+  // ...
+  // @ts-expect-error baz is not yet public
+  baz: 'undocumented option',
+});
+```
+
+For requests with the `GET` verb, any extra params will be in the query, all other requests will send the
+extra param in the body.
+
+If you want to explicitly send an extra argument, you can do so with the `query`, `body`, and `headers` request
+options.
+
+#### Undocumented response properties
+
+To access undocumented response properties, you may access the response object with `// @ts-expect-error` on
+the response object, or cast the response object to the requisite type. Like the request params, we do not
+validate or strip extra properties from the response from the API.
+
+### Customizing the fetch client
+
+By default, this library expects a global `fetch` function is defined.
+
+If you want to use a different `fetch` function, you can either polyfill the global:
+
+```ts
+import fetch from 'my-fetch';
+
+globalThis.fetch = fetch;
+```
+
+Or pass it to the client:
+
+```ts
+import OpenDocRouter from '@llamaindex/opendocrouter';
+import fetch from 'my-fetch';
+
+const client = new OpenDocRouter({ fetch });
+```
+
 ### Fetch options
 
 If you want to set custom `fetch` options without overriding the `fetch` function, you can provide a `fetchOptions` object when instantiating the client or making a request. (Request-specific options override client options.)
@@ -221,25 +286,63 @@ const client = new OpenDocRouter({
 });
 ```
 
-## Versioning
+#### Configuring proxies
 
-This package is distributed only from this Git repository. It is not published to npm, has no release
-tags, and produces no changelog — installing from the default branch always tracks the latest commit.
-To pin a specific revision, install from a commit SHA:
+To modify proxy behavior, you can provide custom `fetchOptions` that add runtime-specific proxy
+options to requests:
 
-    npm install git+https://github.com/run-llama/opendocrouter-typescript.git#<commit-sha>
+<img src="https://raw.githubusercontent.com/stainless-api/sdk-assets/refs/heads/main/node.svg" align="top" width="18" height="21"> **Node** <sup>[[docs](https://github.com/nodejs/undici/blob/main/docs/docs/api/ProxyAgent.md#example---proxyagent-with-fetch)]</sup>
 
-Backwards-incompatible changes can land on the default branch, so pin a SHA if you need a stable surface.
+```ts
+import OpenDocRouter from '@llamaindex/opendocrouter';
+import * as undici from 'undici';
 
-### Determining the installed revision
+const proxyAgent = new undici.ProxyAgent('http://localhost:8888');
+const client = new OpenDocRouter({
+  fetchOptions: {
+    dispatcher: proxyAgent,
+  },
+});
+```
 
-The package version is a fixed placeholder (`0.0.1`) and never changes, so it cannot tell you which
-revision you are running. Because the library is installed from Git, read the commit from your
-project's lockfile instead: the `@llamaindex/opendocrouter` entry records the resolved commit SHA
-in its `resolved` field (`package-lock.json`) or `resolved` line (`yarn.lock`). Quote that SHA when
-filing an issue.
+<img src="https://raw.githubusercontent.com/stainless-api/sdk-assets/refs/heads/main/bun.svg" align="top" width="18" height="21"> **Bun** <sup>[[docs](https://bun.sh/guides/http/proxy)]</sup>
 
-We are keen for your feedback; please open an [issue](https://www.github.com/run-llama/opendocrouter-typescript/issues) with questions, bugs, or suggestions.
+```ts
+import OpenDocRouter from '@llamaindex/opendocrouter';
+
+const client = new OpenDocRouter({
+  fetchOptions: {
+    proxy: 'http://localhost:8888',
+  },
+});
+```
+
+<img src="https://raw.githubusercontent.com/stainless-api/sdk-assets/refs/heads/main/deno.svg" align="top" width="18" height="21"> **Deno** <sup>[[docs](https://docs.deno.com/api/deno/~/Deno.createHttpClient)]</sup>
+
+```ts
+import OpenDocRouter from 'npm:@llamaindex/opendocrouter';
+
+const httpClient = Deno.createHttpClient({ proxy: { url: 'http://localhost:8888' } });
+const client = new OpenDocRouter({
+  fetchOptions: {
+    client: httpClient,
+  },
+});
+```
+
+## Frequently Asked Questions
+
+## Semantic versioning
+
+This package generally follows [SemVer](https://semver.org/spec/v2.0.0.html) conventions, though certain backwards-incompatible changes may be released as minor versions:
+
+1. Changes that only affect static types, without breaking runtime behavior.
+2. Changes to library internals which are technically public but not intended or documented for external use. _(Please open a GitHub issue to let us know if you are relying on such internals.)_
+3. Changes that we do not expect to impact the vast majority of users in practice.
+
+We take backwards-compatibility seriously and work hard to ensure you can rely on a smooth upgrade experience.
+
+We are keen for your feedback; please open an [issue](https://www.github.com/run-llama/opendocrouter-ts/issues) with questions, bugs, or suggestions.
 
 ## Requirements
 
