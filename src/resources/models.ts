@@ -30,6 +30,13 @@ export namespace ModelListResponse {
     avg_charge_per_page_usd: number | null;
 
     /**
+     * True for models on GPUs we start on demand. After the model sits idle, a request
+     * waits up to 45 seconds for one to start, or fails with `model_starting` if it
+     * takes longer, without being charged.
+     */
+    cold_starts: boolean;
+
+    /**
      * The most one page can be charged, which is what a request holds per page.
      */
     max_charge_per_page_usd: number;
@@ -40,6 +47,13 @@ export namespace ModelListResponse {
     max_sync_pages: number;
 
     name: string;
+
+    /**
+     * How long one page takes on this version, from its most recent successful pages
+     * (up to 1,000, within 30 days). Pages in a request run in parallel. Null until
+     * enough pages are measured.
+     */
+    page_latency: Data.PageLatency;
 
     /**
      * ParseBench scores for this version. Null while benchmarking.
@@ -55,6 +69,17 @@ export namespace ModelListResponse {
   }
 
   export namespace Data {
+    /**
+     * How long one page takes on this version, from its most recent successful pages
+     * (up to 1,000, within 30 days). Pages in a request run in parallel. Null until
+     * enough pages are measured.
+     */
+    export interface PageLatency {
+      p50_seconds: number;
+
+      p90_seconds: number;
+    }
+
     /**
      * ParseBench scores for this version. Null while benchmarking.
      */
