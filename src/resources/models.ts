@@ -49,9 +49,9 @@ export namespace ModelListResponse {
     name: string;
 
     /**
-     * How long one page takes on this version, from its most recent successful pages
-     * (up to 1,000, within 30 days). Pages in a request run in parallel. Null until
-     * enough pages are measured.
+     * How long one page takes on this version, from every successful page it has
+     * parsed. Pages in a request run in parallel. Null until enough pages are
+     * measured.
      */
     page_latency: Data.PageLatency;
 
@@ -70,9 +70,9 @@ export namespace ModelListResponse {
 
   export namespace Data {
     /**
-     * How long one page takes on this version, from its most recent successful pages
-     * (up to 1,000, within 30 days). Pages in a request run in parallel. Null until
-     * enough pages are measured.
+     * How long one page takes on this version, from every successful page it has
+     * parsed. Pages in a request run in parallel. Null until enough pages are
+     * measured.
      */
     export interface PageLatency {
       p50_seconds: number;
